@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Cosmetic Box</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #f2f2f7;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      margin: 0;
+      padding-bottom: 70px; /* 留出底部導覽列空間 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 頂部分頁切換按鈕 (Tab Bar) */
+    .tab-bar {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 380px;
+      background: #1c1c1e;
+      position: fixed;
+      bottom: 0;
+      padding: 12px 0;
+      border-top: 1px solid #2c2c2e;
+      z-index: 100;
+    }
+    .tab-item {
+      color: #8e8e93;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tab-item.active { color: #ffffff; }
+
+    /* 頁面容器 */
+    .page { display: none; width: 100%; max-width: 360px; padding: 20px; box-sizing: border-box; }
+    .page.active { display: block; }
+
+    /* 表單與卡片樣式 */
+    .form-card, .product-card {
+      background-color: #1c1c1e;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      box-sizing: border-box;
+    }
+    .input-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; color: #8e8e93; margin-bottom: 4px; }
+    input, select {
+      width: 100%; padding: 10px; background: #2c2c2e; border: 1px solid #3a3a3c;
+      border-radius: 10px; color: #ffffff; font-size: 14px; box-sizing: border-box;
+    }
+    .btn-main {
+      width: 100%; background: #f2f2f7; color: #1c1c1e; border: none; padding: 12px;
+      border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 8px;
+    }
+    #preview { width: 100%; max-height: 160px; object-fit: cover; border-radius: 10px; display: none; margin-top: 8px; }
+    .btn-danger { background: #ff453a; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+    .btn-edit { background: #3a3a3c; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <div style="position: fixed; background-color: white; border: 3px black solid; color: black;">
+      <a href="../../index.html">back to home</a>
+  </div>
+
+  <!-- 頁面 1：今日 AI 推薦區塊 (你的核心邏輯) -->
+  <div id="page-recommend" class="page active">
+    <h2 style="font-size: 22px; text-align: center; margin-bottom: 16px;">✨ DAILY LOOK</h2>
+    <!-- AI 卡片渲染容器 -->
+    <div id="ai-combo-result"></div>
+  </div>
+
+  <!-- 頁面 2：化妝品新增與庫存列表 (組員的建檔邏輯擴充) -->
+  <div id="page-inventory" class="page">
+    <div class="form-card">
+      <h2 style="font-size: 18px; margin-top:0;">💄 新增化妝品</h2>
+      <div class="input-group">
+        <label>照片</label>
+        <input type="file" id="photo" accept="image/*">
+        <img id="preview">
+      </div>
+      <div class="input-group">
+        <label>產品名稱</label>
+        <input type="text" id="name" placeholder="例如：無瑕霧感粉底液">
+      </div>
+      <div class="input-group">
+        <label>品牌</label>
+        <input type="text" id="brand" placeholder="例如：MAC">
+      </div>
+      <div class="input-group">
+        <label>類別 (AI搭配用)</label>
+        <select id="category">
+          <option value="粉底液">粉底液</option>
+          <option value="眼影盤">眼影盤</option>
+          <option value="口紅">口紅</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>色調 (AI避坑用)</label>
+        <select id="tone">
+          <option value="暖色調">暖色調</option>
+          <option value="冷色調">冷色调</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>收納分區 (ESP32對應)</label>
+        <select id="zone">
+          <option value="A區">A區</option>
+          <option value="B區">B區</option>
+          <option value="C區">C區</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>保存期限 / PAO 到期日</label>
+        <input type="date" id="expiry">
+      </div>
+      <button id="save" class="btn-main">儲存並同步至 AI 庫存</button>
+    </div>
+
+    <h3 style="font-size: 16px;">📦 盒內庫存清單</h3>
+    <div id="productList"></div>
+  </div>
+
+  <!-- 底部導覽列 -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab('recommend')">✨ 今日推薦</div>
+    <div class="tab-item" onclick="switchTab('inventory')">📦 庫存管理</div>
+  </div>
+
+  <!-- 引入邏輯腳本 -->
+  <script src="app.js"></script>
+</body>
+</html>

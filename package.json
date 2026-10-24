@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "@types/electron": "^1.6.12",
+    "@types/node": "^26.6.3",
+    "discord.js": "^14.27.0",
+    "electron": "^44.4.5",
+    "sqlite3": "^6.0.1",
+    "typescript": "^7.0.2",
+    "yarn": "^1.22.22"
+  },
+  "name": "owo",
+  "version": "1.0.0",
+  "main": "main.js",
+  "license": "MIT",
+  "description": "meow",
+  "author": "XiaoYunTW"
+}

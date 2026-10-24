@@ -1,0 +1,507 @@
+<!DOCTYPE html><html lang="zh-TW" class="dark"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MY BEAUTY - 化妝品管理</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#000000',
+              card: '#161618',
+              cardHover: '#1c1c1e',
+              border: '#2c2c2e',
+              subtext: '#8e8e93',
+              accent: '#ffffff',
+              accentHover: '#e5e5ea',
+              danger: '#ff453a',
+              warning: '#ffd60a'
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Helvetica Neue"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 0px; background: transparent; }
+    .glass-nav {
+      background: rgba(22, 22, 24, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .glass-modal {
+      background: rgba(22, 22, 24, 0.92);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+  <!-- Google Identity Services SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head><body class="bg-brand-bg text-white font-sans antialiased min-h-screen pb-24 selection:bg-white selection:text-black">
+
+  <!-- App Container -->
+  <div id="app" class="max-w-md mx-auto min-h-screen relative flex flex-col border-x border-brand-border/40 shadow-2xl">
+    
+    <!-- Top Header Bar -->
+    <header class="sticky top-0 z-30 glass-nav border-b border-brand-border/60 px-5 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <div class="w-6 h-6 rounded-full border border-white/20 flex items-center justify-center">
+          <div class="w-2 h-2 bg-white rounded-full"></div>
+        </div>
+        <span class="text-xs font-semibold tracking-widest uppercase text-brand-subtext">MY BEAUTY</span>
+      </div>
+      <div id="header-title" class="text-base font-medium tracking-tight text-white">總覽 Dashboard</div>
+      <button id="quick-add-btn" class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center transition hover:bg-brand-accentHover active:scale-95">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      </button>
+    </header>
+
+    <!-- Main Content Dynamic Views -->
+    <main class="flex-1 p-5 space-y-6">
+
+      <!-- PAGE 1: DASHBOARD -->
+      <section id="view-dashboard" class="view-page space-y-6">
+        <div>
+          <h1 class="text-2xl font-light tracking-tight text-white">化妝品管理總覽</h1>
+          <p class="text-xs text-brand-subtext mt-1">簡約純粹的個人美妝數位收藏夾</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-brand-card p-4 rounded-2xl border border-brand-border/60 flex flex-col justify-between">
+            <span class="text-xs text-brand-subtext font-medium">使用中品項</span>
+            <div id="kpi-using" class="text-3xl font-light tracking-tight mt-3 text-white">0</div>
+          </div>
+          <div class="bg-brand-card p-4 rounded-2xl border border-brand-border/60 flex flex-col justify-between">
+            <span class="text-xs text-brand-subtext font-medium">使用紀錄</span>
+            <div id="kpi-records" class="text-3xl font-light tracking-tight mt-3 text-white">0</div>
+          </div>
+          <div class="bg-brand-card p-4 rounded-2xl border border-brand-border/60 flex flex-col justify-between">
+            <span class="text-xs text-brand-subtext font-medium">即將過期</span>
+            <div id="kpi-pending" class="text-3xl font-light tracking-tight mt-3 text-white">0</div>
+          </div>
+          <div class="bg-brand-card p-4 rounded-2xl border border-brand-border/60 flex flex-col justify-between">
+            <span class="text-xs text-brand-subtext font-medium">平均評分</span>
+            <div id="kpi-rating" class="text-3xl font-light tracking-tight mt-3 text-white">0.0</div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex justify-between items-center px-1">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-brand-subtext">即將過期提醒 (30天內)</h2>
+            <span id="expiry-count-badge" class="text-xs text-brand-subtext">0 件</span>
+          </div>
+          <div id="dashboard-expiry-list" class="space-y-2"></div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex justify-between items-center px-1">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-brand-subtext">最新加入品項</h2>
+            <button onclick="switchTab('products')" class="text-xs text-white hover:underline">查看全部 &rarr;</button>
+          </div>
+          <div id="dashboard-recent-list" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- PAGE 2: PRODUCTS LIST -->
+      <section id="view-products" class="view-page hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-light tracking-tight text-white">我的商品</h1>
+            <p class="text-xs text-brand-subtext mt-0.5">收錄所有在使用中與已完用的保養美妝</p>
+          </div>
+        </div>
+
+        <div class="relative">
+          <input type="text" id="product-search" placeholder="搜尋品牌或品名..." 
+            class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-2.5 text-sm text-white placeholder-brand-subtext focus:outline-none focus:border-white transition">
+          <svg class="w-4 h-4 absolute right-3.5 top-3.5 text-brand-subtext" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+
+        <div id="products-list" class="space-y-3"></div>
+      </section>
+
+      <!-- PAGE 3: ADD PRODUCT -->
+      <section id="view-add" class="view-page hidden space-y-5">
+        <div>
+          <h1 class="text-2xl font-light tracking-tight text-white">新增商品</h1>
+          <p class="text-xs text-brand-subtext mt-0.5">紀錄新品項並設定效期提醒</p>
+        </div>
+
+        <form id="add-product-form" class="space-y-4">
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-brand-subtext uppercase tracking-wider">商品照片</label>
+            <div id="photo-dropzone" class="relative bg-brand-card border border-dashed border-brand-border rounded-2xl h-48 flex flex-col items-center justify-center cursor-pointer hover:border-white/50 transition overflow-hidden">
+              <input type="file" id="input-photo" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+              <div id="photo-placeholder" class="flex flex-col items-center space-y-2 text-brand-subtext">
+                <svg class="w-8 h-8 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h0.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+                <span class="text-xs">點擊上傳或拍攝照片</span>
+              </div>
+              <img id="photo-preview" class="hidden absolute inset-0 w-full h-full object-cover">
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-brand-subtext uppercase tracking-wider">品牌名 *</label>
+            <input type="text" id="input-brand" required placeholder="例如: CHANEL, DIOR, SHISEIDO" 
+              class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition">
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-brand-subtext uppercase tracking-wider">商品名稱 *</label>
+            <input type="text" id="input-name" required placeholder="例如: 超完美持久粉底液" 
+              class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition">
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-brand-subtext uppercase tracking-wider">有效期限 *</label>
+            <input type="date" id="input-expiry" required 
+              class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition">
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-brand-subtext uppercase tracking-wider">AI 推薦類別 *</label>
+            <select id="input-category" required
+              class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition">
+              <option value="粉底液">粉底液</option>
+              <option value="眼影盤">眼影盤</option>
+              <option value="口紅">口紅</option>
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-brand-subtext uppercase tracking-wider">AI 色調 *</label>
+            <select id="input-tone" required
+              class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition">
+              <option value="暖色調">暖色調</option>
+              <option value="冷色調">冷色調</option>
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-brand-subtext uppercase tracking-wider">收納分區 *</label>
+            <select id="input-zone" required
+              class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition">
+              <option value="A區">A區</option>
+              <option value="B區">B區</option>
+              <option value="C區">C區</option>
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-brand-subtext uppercase tracking-wider">備註說明 (選填)</label>
+            <textarea id="input-notes" rows="3" placeholder="色號、開封日或備註..." 
+              class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition resize-none"></textarea>
+          </div>
+
+          <button type="submit" class="w-full py-3.5 rounded-xl bg-white text-black font-medium text-sm hover:bg-brand-accentHover active:scale-[0.99] transition mt-2">
+            儲存商品
+          </button>
+        </form>
+      </section>
+
+      <!-- PAGE 4: TODAY AI RECOMMENDATION -->
+      <section id="view-recommend" class="view-page hidden space-y-5">
+        <div>
+          <h1 class="text-2xl font-light tracking-tight text-white">✨ 今日推薦</h1>
+          <p class="text-xs text-brand-subtext mt-1">依照色調與效期，從你的化妝品庫存自動搭配今日妝容</p>
+        </div>
+
+        <div id="ai-combo-result" class="space-y-4"></div>
+
+        <div class="bg-brand-card/60 border border-brand-border/50 rounded-2xl p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-brand-subtext">目前推薦邏輯</span>
+            <span class="text-xs text-white">暖色調 × 效期優先</span>
+          </div>
+          <p class="text-[11px] text-brand-subtext leading-relaxed mt-2">
+            越接近到期、且符合暖色調的商品會獲得較高推薦分數，再從粉底液、眼影盤、口紅中各挑選一項。
+          </p>
+        </div>
+      </section>
+
+      <!-- PAGE 5: RECORDS & COLLECTIONS -->
+      <section id="view-records" class="view-page hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-light tracking-tight text-white">我的紀錄</h1>
+            <p class="text-xs text-brand-subtext mt-0.5">分類收藏與使用心得心得歸檔</p>
+          </div>
+          <button id="manage-collections-btn" class="px-3 py-1.5 rounded-lg border border-brand-border text-xs text-white hover:bg-brand-card transition">
+            管理分類
+          </button>
+        </div>
+
+        <div id="collections-tab-bar" class="flex space-x-2 overflow-x-auto no-scrollbar py-1"></div>
+        <div id="records-list" class="space-y-3"></div>
+      </section>
+
+      <!-- PAGE 6: PROFILE -->
+      <section id="view-profile" class="view-page hidden space-y-6">
+        <div>
+          <h1 class="text-2xl font-light tracking-tight text-white">個人專區</h1>
+          <p class="text-xs text-brand-subtext mt-0.5">帳號設定與資料庫管理</p>
+        </div>
+
+        <div class="bg-brand-card border border-brand-border/80 rounded-2xl p-5 flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div id="profile-avatar" class="w-12 h-12 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white font-medium text-lg overflow-hidden">
+              MB
+            </div>
+            <div>
+              <div id="profile-username" class="text-base font-medium text-white">美妝愛好者</div>
+              <div id="profile-email" class="text-xs text-brand-subtext">MY BEAUTY 會員</div>
+            </div>
+          </div>
+          <button id="profile-auth-btn" onclick="openModal('modal-login')" class="px-3 py-1.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-brand-accentHover transition">
+            登入 / 註冊
+          </button>
+        </div>
+
+        <!-- 郵件通知測試按鈕 -->
+        <button onclick="triggerTestEmailNotify()" class="w-full bg-brand-card border border-brand-border/80 rounded-2xl p-4 flex justify-between items-center text-left hover:bg-brand-cardHover transition">
+          <div>
+            <div class="text-sm text-white font-medium">📧 發送過期 Email 提醒測試</div>
+            <div class="text-[11px] text-brand-subtext mt-1">手動觸發後端排程，將過期提醒寄至您登入的 Email</div>
+          </div>
+          <svg class="w-4 h-4 text-brand-subtext" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+
+        <button onclick="switchTab('records')" class="w-full bg-brand-card border border-brand-border/80 rounded-2xl p-4 flex justify-between items-center text-left hover:bg-brand-cardHover transition">
+          <div>
+            <div class="text-sm text-white font-medium">我的紀錄</div>
+            <div class="text-[11px] text-brand-subtext mt-1">查看收藏分類、使用心得與評分</div>
+          </div>
+          <svg class="w-4 h-4 text-brand-subtext" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+
+        <div class="bg-brand-card border border-brand-border/80 rounded-2xl divide-y divide-brand-border/60">
+          <div class="p-4 flex justify-between items-center">
+            <span class="text-sm text-white">資料備份版本</span>
+            <span class="text-xs text-brand-subtext font-mono">v3.0.0</span>
+          </div>
+          <div class="p-4 flex justify-between items-center">
+            <span class="text-sm text-white">總商品建檔筆數</span>
+            <span id="profile-total-count" class="text-sm font-medium text-white">0</span>
+          </div>
+          <button onclick="exportData()" class="w-full p-4 flex justify-between items-center text-left hover:bg-white/5 transition">
+            <span class="text-sm text-white">匯出備份資料 JSON</span>
+            <svg class="w-4 h-4 text-brand-subtext" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <button onclick="resetSystemData()" class="w-full p-4 flex justify-between items-center text-left text-brand-danger hover:bg-brand-danger/10 transition">
+            <span class="text-sm font-medium">重置並清空所有資料</span>
+            <svg class="w-4 h-4 text-brand-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-nav border-t border-brand-border/60 px-2 py-2.5 z-30 flex justify-around items-center">
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center space-y-1 text-white transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="text-[10px] tracking-tight">總覽</span>
+      </button>
+
+      <button onclick="switchTab('products')" id="nav-products" class="nav-btn flex flex-col items-center space-y-1 text-brand-subtext hover:text-white transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        <span class="text-[10px] tracking-tight">商品</span>
+      </button>
+
+      <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center space-y-1 text-brand-subtext hover:text-white transition">
+        <div class="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+        </div>
+        <span class="text-[10px] tracking-tight">新增</span>
+      </button>
+
+      <button onclick="switchTab('recommend')" id="nav-recommend" class="nav-btn flex flex-col items-center space-y-1 text-brand-subtext hover:text-white transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3zm6.5 11.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></svg>
+        <span class="text-[10px] tracking-tight">今日推薦</span>
+      </button>
+
+      <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn flex flex-col items-center space-y-1 text-brand-subtext hover:text-white transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <span class="text-[10px] tracking-tight">我的</span>
+      </button>
+    </nav>
+
+    <!-- AUTH MODALS -->
+    <div id="modal-login" onclick="closeModalOnBg(event, 'modal-login')" class="fixed inset-0 z-50 hidden flex items-end justify-center bg-black/70 backdrop-blur-sm transition-opacity">
+      <div class="glass-modal border-t border-brand-border/80 w-full max-w-md rounded-t-3xl p-6 space-y-4 relative">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-medium text-white">會員登入</h3>
+          <button onclick="closeModal('modal-login')" class="text-brand-subtext hover:text-white text-lg p-1">✕</button>
+        </div>
+
+        <div class="flex flex-col items-center justify-center py-2 space-y-2">
+          <div id="g_id_onload"
+               data-client_id="109303327543-1p0rp2cib7322k7k19dcpi6lm6o6696t.apps.googleusercontent.com"
+               data-callback="handleGoogleLoginResponse"
+               data-auto_prompt="false">
+          </div>
+          <div class="g_id_signin"
+               data-type="standard"
+               data-size="large"
+               data-theme="dark"
+               data-text="sign_in_with"
+               data-shape="rectangular"
+               data-logo_alignment="left">
+          </div>
+        </div>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-brand-border/60"></div>
+          <span class="flex-shrink mx-3 text-[11px] text-brand-subtext">或使用帳號密碼</span>
+          <div class="flex-grow border-t border-brand-border/60"></div>
+        </div>
+
+        <div class="space-y-2">
+          <input type="email" id="login-email" placeholder="Email" class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white">
+          <input type="password" id="login-password" placeholder="密碼" class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white">
+        </div>
+
+        <button id="btn-submit-login" class="w-full py-3.5 rounded-xl bg-white text-black font-medium text-sm hover:bg-brand-accentHover transition">
+          登入
+        </button>
+
+        <div class="text-center text-xs text-brand-subtext pt-1">
+          還沒有帳號？ <button onclick="closeModal('modal-login'); openModal('modal-register');" class="text-white underline">立即註冊</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-register" onclick="closeModalOnBg(event, 'modal-register')" class="fixed inset-0 z-50 hidden flex items-end justify-center bg-black/70 backdrop-blur-sm transition-opacity">
+      <div class="glass-modal border-t border-brand-border/80 w-full max-w-md rounded-t-3xl p-6 space-y-4 relative">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-medium text-white">建立新帳號</h3>
+          <button onclick="closeModal('modal-register')" class="text-brand-subtext hover:text-white text-lg p-1">✕</button>
+        </div>
+
+        <div class="space-y-2">
+          <input type="text" id="reg-name" placeholder="暱稱" class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white">
+          <input type="email" id="reg-email" placeholder="Email (過期通知憑證)" class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white">
+          <input type="password" id="reg-password" placeholder="密碼" class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white">
+        </div>
+
+        <button id="btn-submit-register" class="w-full py-3.5 rounded-xl bg-white text-black font-medium text-sm hover:bg-brand-accentHover transition">
+          註冊帳號
+        </button>
+      </div>
+    </div>
+
+    <!-- PRODUCT MODALS -->
+    <div id="modal-detail" onclick="closeModalOnBg(event, 'modal-detail')" class="fixed inset-0 z-50 hidden flex items-end justify-center bg-black/70 backdrop-blur-sm transition-opacity">
+      <div class="glass-modal border-t border-brand-border/80 w-full max-w-md rounded-t-3xl p-6 space-y-5 max-h-[85vh] overflow-y-auto">
+        <div class="flex justify-between items-start">
+          <div>
+            <span id="detail-brand" class="text-xs uppercase font-semibold text-brand-subtext tracking-wider">BRAND</span>
+            <h3 id="detail-name" class="text-xl font-normal text-white mt-0.5">Product Name</h3>
+          </div>
+          <button onclick="closeModal('modal-detail')" class="text-brand-subtext hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div id="detail-img-container" class="w-full h-48 rounded-2xl overflow-hidden bg-brand-card border border-brand-border/60 flex items-center justify-center">
+          <img id="detail-img" class="w-full h-full object-cover">
+        </div>
+
+        <div class="space-y-2 text-sm text-brand-subtext">
+          <div class="flex justify-between py-1 border-b border-brand-border/40">
+            <span>有效期限</span>
+            <span id="detail-expiry" class="text-white font-mono">2026-00-00</span>
+          </div>
+          <div class="flex justify-between py-1 border-b border-brand-border/40">
+            <span>使用狀態</span>
+            <span id="detail-status" class="text-white">使用中</span>
+          </div>
+          <div class="flex justify-between py-1 border-b border-brand-border/40">
+            <span>所屬分類</span>
+            <span id="detail-collections" class="text-white">無</span>
+          </div>
+          <div class="py-1">
+            <span class="block mb-1">備註說明</span>
+            <p id="detail-notes" class="text-white bg-black/30 p-3 rounded-xl border border-brand-border/40 text-xs leading-relaxed">無備註</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button id="btn-toggle-finish" class="py-3 rounded-xl bg-brand-card border border-brand-border text-white text-xs font-medium hover:bg-brand-cardHover transition">標示為完用</button>
+          <button id="btn-open-review" class="py-3 rounded-xl bg-white text-black text-xs font-medium hover:bg-brand-accentHover transition">新增/修改心得</button>
+        </div>
+        <button id="btn-delete-product" class="w-full py-3 rounded-xl border border-brand-danger/30 text-brand-danger text-xs font-medium hover:bg-brand-danger/10 transition">刪除此商品</button>
+      </div>
+    </div>
+
+    <div id="modal-review" onclick="closeModalOnBg(event, 'modal-review')" class="fixed inset-0 z-50 hidden flex items-end justify-center bg-black/70 backdrop-blur-sm transition-opacity">
+      <div class="glass-modal border-t border-brand-border/80 w-full max-w-md rounded-t-3xl p-6 space-y-5">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-normal text-white">心得與評分</h3>
+          <button onclick="closeModal('modal-review')" class="text-brand-subtext hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="flex flex-col items-center space-y-2 py-2">
+          <span class="text-xs text-brand-subtext">點擊評分 (1 - 5 星)</span>
+          <div id="star-rating-picker" class="flex space-x-2 text-3xl cursor-pointer">
+            <span data-star="1" class="star-btn text-brand-border hover:text-white transition">★</span>
+            <span data-star="2" class="star-btn text-brand-border hover:text-white transition">★</span>
+            <span data-star="3" class="star-btn text-brand-border hover:text-white transition">★</span>
+            <span data-star="4" class="star-btn text-brand-border hover:text-white transition">★</span>
+            <span data-star="5" class="star-btn text-brand-border hover:text-white transition">★</span>
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium text-brand-subtext uppercase">心得體驗</label>
+          <textarea id="input-review-text" rows="4" placeholder="寫下質地、持久度或使用感想..." 
+            class="w-full bg-brand-card border border-brand-border/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition resize-none"></textarea>
+        </div>
+
+        <button id="btn-save-review" class="w-full py-3.5 rounded-xl bg-white text-black font-medium text-sm hover:bg-brand-accentHover transition">儲存評分心得</button>
+      </div>
+    </div>
+
+    <div id="modal-collections" onclick="closeModalOnBg(event, 'modal-collections')" class="fixed inset-0 z-50 hidden flex items-end justify-center bg-black/70 backdrop-blur-sm transition-opacity">
+      <div class="glass-modal border-t border-brand-border/80 w-full max-w-md rounded-t-3xl p-6 space-y-5 max-h-[85vh] overflow-y-auto">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-normal text-white">管理收藏分類</h3>
+          <button onclick="closeModal('modal-collections')" class="text-brand-subtext hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="flex space-x-2">
+          <input type="text" id="input-new-collection" placeholder="新增分類 (例如: 日常保養)" 
+            class="flex-1 bg-brand-card border border-brand-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-white">
+          <button id="btn-add-collection" class="px-4 py-2 bg-white text-black font-medium text-xs rounded-xl hover:bg-brand-accentHover">新增</button>
+        </div>
+
+        <div id="collections-manage-list" class="space-y-3 pt-2"></div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-[-10px]">
+      <div class="glass-nav border border-brand-border px-4 py-2.5 rounded-full text-xs text-white shadow-xl flex items-center space-x-2">
+        <span id="toast-message">Message</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="./index.js"></script>
+</body>
+</html>
