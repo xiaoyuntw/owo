@@ -2,3 +2,4 @@
 node_modules
 setup.ps1
 **/*.d.*
+.git*
