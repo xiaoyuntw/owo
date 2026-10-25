@@ -5,6 +5,7 @@
     ========================================================================== */
 const STORAGE_KEY = 'MY_BEAUTY_DATA_V3';
 const USERS_KEY = 'MY_BEAUTY_USERS_V1';
+const BACKEND_URL = 'http://localhost:3000'; // 後端伺服器網址
 // Default State Structure
 let appState = {
     currentUser: null,

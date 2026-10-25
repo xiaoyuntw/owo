@@ -41,10 +41,10 @@ async function sendExpiryEmail(userEmail, expiringProducts) {
   const mailOptions = {
     from: `"MY BEAUTY 智慧管家" <${process.env.SENDER_EMAIL || 'your-system-email@gmail.com'}>`,
     to: userEmail,
-    subject: `💄【MY BEAUTY】您有 ${expiringProducts.length} 件化妝品即將過期提醒！`,
+    subject: `【MY BEAUTY】您有 ${expiringProducts.length} 件化妝品即將過期提醒！`,
     html: `
       <div style="background-color: #0f172a; padding: 20px; font-family: sans-serif; color: #f8fafc; max-width: 600px; margin: auto; border-radius: 12px;">
-        <h2 style="color: #38bdf8; margin-bottom: 10px;">💄 MY BEAUTY 到期提醒</h2>
+        <h2 style="color: #38bdf8; margin-bottom: 10px;">MY BEAUTY 到期提醒</h2>
         <p style="font-size: 14px; color: #cbd5e1;">親愛的會員您好，系統檢測到您有以下化妝品即將在 <b>30 天之內過期</b>，請記得優先使用或進行清理喔！</p>
         
         <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; text-align: left;">
